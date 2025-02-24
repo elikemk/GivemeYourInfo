@@ -33,5 +33,44 @@ const creatTable = async () => {
         console.error("Database error:", error);
     }
 };
-creatTable();
+creatTable()
+
+app.post("/add-email", async (req, res) =>  {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: "Email is required"});
+    }
+
+    try{
+        const result = await pool.query(
+            "INSErT INTO emails (email) VALUES ($1) ON CONFLICT DO NOTHING RETURN ",
+            [email]
+        );
+
+        if (result.rowCount == 0){
+            return res.status(409).json({ message: "Email already exists"});
+        }
+
+        res.status(201).json({ message: "Email added sucessfully!"});
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+
+});
+
+//Route me to retrieve emails
+
+app.get("/emails", async(req, res) => {
+
+    try{
+        const result = await pool.query("SELECT email FROM emails");
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
 
